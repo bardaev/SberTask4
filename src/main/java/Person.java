@@ -2,8 +2,11 @@ import java.math.BigDecimal;
 
 public class Person {
     private String name;
+    // Начальная сумма
     private BigDecimal wallet;
+    // Конечная сумма (начальная + начислено банком)
     private BigDecimal sumWallet;
+    // Сколько начислено банком
     private BigDecimal appendFromBank;
 
     public Person(String name, BigDecimal wallet) {

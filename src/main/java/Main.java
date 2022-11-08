@@ -54,12 +54,11 @@ public class Main {
         writeResult(bank);
     }
 
+    /*
+        Отсортируем массив и далее будем выравнивать счета, добавляя по еденице к счету, у которого самая меньшая сумма,
+        и вычитая из счета банка.
+    */
     public static void compute(Bank bank) {
-        BigDecimal sumPersonWallet = new BigDecimal(0);
-        for (int i = 0; i < bank.getPersonList().size(); i++) {
-            sumPersonWallet = sumPersonWallet.add(bank.getPersonList().get(i).getWallet());
-        }
-
         bank.getPersonList().sort(new PersonComparator());
 
         BigDecimal sumBank = bank.getWallet();
