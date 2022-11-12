@@ -59,23 +59,23 @@ public class Main {
         и вычитая из счета банка.
     */
     public static void compute(Bank bank) {
+        BigDecimal countPerson = BigDecimal.valueOf(bank.getPersonList().size());
         bank.getPersonList().sort(new PersonComparator());
 
         BigDecimal sumBank = bank.getWallet();
 
         while (isMoreZero(sumBank)) {
 
-            if (!isListAlign(bank.getPersonList()) && isMoreOne(sumBank)) {
+            if (!isListAlign(bank.getPersonList()) && isMoreZero(sumBank)) {
                 sumBank = alignmentWallet(bank.getPersonList(), sumBank);
             } else {
-                if (isMoreOne(sumBank)) {
-                    Person person = bank.getPersonList().get(bank.getPersonList().size() - 1);
-                    person.setAppendFromBank(BigDecimal.ONE);
-                    sumBank = sumBank.subtract(BigDecimal.ONE);
-                } else if (betweenZeroAndOne(sumBank)) {
-                    Person person = bank.getPersonList().get(bank.getPersonList().size() - 1);
-                    person.setAppendFromBank(sumBank);
-                    sumBank = sumBank.subtract(sumBank);
+                BigDecimal plusWallet = sumBank.divide(countPerson, RoundingMode.DOWN).setScale(0, RoundingMode.DOWN);
+                if (plusWallet.compareTo(BigDecimal.ONE) > 0) {
+                    sumBank = sumBank.subtract(plusWallet);
+                    bank.getPersonList().get(bank.getPersonList().size() - 1).setAppendFromBank(plusWallet);
+                } else if (isMoreOne(sumBank)) {
+                        sumBank = sumBank.subtract(BigDecimal.ONE);
+                        bank.getPersonList().get(bank.getPersonList().size() - 1).setAppendFromBank(BigDecimal.ONE);
                 }
             }
         }
@@ -88,25 +88,26 @@ public class Main {
 
     public static BigDecimal alignmentWallet(List<Person> personList, BigDecimal sumBank) {
         int i = 1, j = 0;
-        while (!isListAlign(personList) && i < personList.size()) {
+
+        while (i < personList.size()) {
             Person current = personList.get(i);
             Person prev = personList.get(j);
 
-            if (i == 1) {
-                while (comparePrevLessCurrent(prev, current) && isMoreOne(sumBank)) {
-                    sumBank = sumBank.subtract(BigDecimal.ONE);
-                    prev.setAppendFromBank(BigDecimal.ONE);
+            BigDecimal needSum = current.getSumWallet().subtract(prev.getSumWallet());
+            if (j != i) {
+                if (comparePrevLessCurrent(prev, current) && isNeedAmount(sumBank, needSum)) {
+                    sumBank = sumBank.subtract(needSum);
+                    prev.setAppendFromBank(needSum);
+                } else if (comparePrevLessCurrent(prev, current)) {
+                    prev.setAppendFromBank(sumBank);
+                    sumBank = sumBank.subtract(sumBank);
                 }
+                j++;
             } else {
-                while (comparePrevLessCurrent(prev, current) && isMoreOne(sumBank) && j != i) {
-                    sumBank = sumBank.subtract(BigDecimal.ONE);
-                    prev.setAppendFromBank(BigDecimal.ONE);
-                    prev = personList.get(++j);
-                }
+                j = 0;
+                i++;
             }
 
-            j = 0;
-            i++;
         }
 
         return sumBank;
@@ -121,21 +122,21 @@ public class Main {
         return true;
     }
 
-    public static boolean betweenZeroAndOne(BigDecimal bigDecimal) {
-        return bigDecimal.compareTo(BigDecimal.ONE) < 0 && bigDecimal.compareTo(BigDecimal.ZERO) > 0;
-    }
-
-    public static boolean isMoreOne(BigDecimal wallet) {
-        return wallet.compareTo(BigDecimal.ONE) > 0;
+    public static boolean isNeedAmount(BigDecimal wallet, BigDecimal needSum) {
+        return wallet.compareTo(needSum) > 0;
     }
 
     public static boolean isMoreZero(BigDecimal wallet) {
         return wallet.compareTo(BigDecimal.ZERO) > 0;
     }
 
+    public static boolean isMoreOne(BigDecimal wallet) {
+        return wallet.compareTo(BigDecimal.ONE) > 0;
+    }
+
     public static boolean comparePrevLessCurrent(Person prev, Person curr) {
-        BigDecimal p = prev.getSumWallet().setScale(0, RoundingMode.DOWN);
-        BigDecimal c = curr.getSumWallet().setScale(0, RoundingMode.DOWN);
+        BigDecimal p = prev.getSumWallet();
+        BigDecimal c = curr.getSumWallet();
         return p.compareTo(c) < 0;
     }
 
